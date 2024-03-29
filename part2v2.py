@@ -1,15 +1,22 @@
 import time
 from scapy.all import ICMP, IP, Raw, sr1
+import struct
 
 #Correr con sudo python3 part2-scapysend.py :)
 
+def get_timestamp():
+    return int(time.time())
+
 #Dirección IP de destino
-IP_dst = "127.0.0.1"
-IP_src = "192.168.100.12"
+IP_dst = "8.8.8.8"
+IP_src = "192.168.1.139"
 
 def generate_icmp_packet(char, seq):
     #En esta parte se crea el payload del paquete ICMP
 
+    timestamp = get_timestamp()
+    timestamp_bytes = struct.pack('<Q', timestamp)  # Convertir el timestamp a bytes en Little Endian
+    payload = timestamp  #Se guarda el timestamp en payload
     payload = char.encode()  #Se convierte el caracter "Cifrado" a bytes y se guarda en payload
     payload += b'\x00' * 7  #Se agregan 7 bytes nulos
 
@@ -18,7 +25,7 @@ def generate_icmp_packet(char, seq):
         payload += bytes([i])
 
     #Se construye el paquete ICMP
-    icmp_packet = IP(src = IP_src, dst=IP_dst)/ICMP(type=8, id=1)/Raw(load=payload)
+    icmp_packet = IP(src = IP_src, dst=IP_dst)/ICMP(type=8, id=1)/bytes(timestamp_bytes)/Raw(load=payload)
 
     #Se configura el campo seq
     icmp_packet[ICMP].seq = seq
